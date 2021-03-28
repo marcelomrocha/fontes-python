@@ -1,0 +1,157 @@
+#!/usr/bin/env python
+
+from Tkinter import *
+from math import *
+
+largura = 400
+altura  = 400
+pontos = [(80,100), (100,80), (-80,100), (-100,80),(-80,-100),(-100,-80),(80,-100),(100,-80)]
+
+global x1, x2, y1, y2, fx, fy
+fx, fy = 0, 0
+
+
+class Interface:
+	def __init__(self, raiz):
+		self.frame_canvas = Frame(raiz)
+		self.frame_canvas.pack(side = LEFT)
+		
+		self.canvas = Canvas(self.frame_canvas, width = largura, height = altura, cursor = 'cross', bd = 0, bg = 'black')
+		self.canvas.bind("<B1-Motion>", self.clica_Move)
+		self.canvas.bind("<ButtonPress-1>", self.canvas_click)
+		self.canvas.pack()
+		
+		self.frame = Frame(raiz)
+		self.frame.pack()
+		
+		Label(self.frame, text='Coord. x').pack()
+		self.entry_x = Entry(self.frame, width = 10)
+		self.entry_x.pack()
+		
+		Label(self.frame, text='Coord. y').pack()
+		self.entry_y = Entry(self.frame, width = 10)
+		self.entry_y.pack()
+		
+		self.b1_cria = Button(self.frame, text='Cria Ponto', command=self.cria_ponto)
+		self.b1_cria.pack()
+		
+		Label(self.frame, text='Grau ').pack()
+		self.entry_grau = Entry(self.frame, width = 10)
+		self.entry_grau.pack()
+		
+		self.b2_gira = Button(self.frame, text='Girar', command=self.girar)
+		self.b2_gira.pack()
+		
+		Label(self.frame, text='Escala').pack()
+		self.entry_escala = Entry(self.frame, width = 10)
+		self.entry_escala.pack()
+		
+		self.b3_escala = Button(self.frame, text='Escalar', command=self.escalar)
+		self.b3_escala.pack()
+		
+		Label(self.frame, text='mov_x').pack()
+		self.entry_mov_x = Entry(self.frame, width = 10)
+		self.entry_mov_x.pack()
+		Label(self.frame, text='mov_y').pack()
+		self.entry_mov_y = Entry(self.frame, width = 10)
+		self.entry_mov_y.pack()
+		
+		self.b4_move = Button(self.frame, text='Mover', command=self.mover)
+		self.b4_move.pack()
+		
+		#inicializando valores
+		self.entry_escala.insert(0, '1')
+		self.entry_grau.insert(0, '0')
+		self.entry_x.insert(0, '0')
+		self.entry_y.insert(0, '0')
+		self.entry_mov_x.insert(0, '0')
+		self.entry_mov_y.insert(0, '0')
+		
+		self.desenha()
+
+	def cria_ponto(self):
+		px = float(self.entry_x.get())
+		py = float(self.entry_y.get())		
+		pontos.append((px, py))
+		self.desenha()
+		
+	def canvas_click(self, event):
+		global x2, y2
+		x2 = event.x
+		y2 = event.y
+		
+	def clica_Move(self, event):
+		global x1, x2, y1, y2, fx, fy
+		
+		x1 = event.x
+		y1 = event.y
+		
+		if x1 < x2: fx = fx + (x2-x1)
+		if x1 > x2: fx = fx - (x1-x2)
+		x2 = x1
+		
+		if y1 < y2: fy = fy + (y2-y1)
+		if y1 > y2: fy = fy - (y1-y2)
+		y2 = y1
+
+		self.desenha()
+				
+	def girar(self):
+		i = 0 #indice
+		grau = float(self.entry_grau.get())
+		for p in pontos:
+			angulo = get_angulo(p[0], p[1]) + grau
+			modulo = hypot(p[0], p[1])
+			pontos[i] = (modulo * cos(radians(angulo)), modulo * sin(radians(angulo)))
+			i = i + 1
+		self.desenha()
+		
+	def escalar(self):
+		i = 0 #indice
+		escala = float(self.entry_escala.get())
+		if escala <= 0:
+			print 'erro, entre valores maiores que 0...'
+		else:	
+			for p in pontos:
+				pontos[i] = (p[0] * escala, p[1] * escala)
+				i = i + 1
+			self.desenha()
+			
+	def mover(self): # move figura nos eixos x e y
+		i = 0 #indice
+		desloc_x = float(self.entry_mov_x.get())
+		desloc_y = float(self.entry_mov_y.get())
+		for p in pontos:
+			pontos[i] = (p[0] + desloc_x, p[1] + desloc_y)
+			i = i + 1
+		self.desenha()
+		
+	def desenha(self): # desenha figura armazenada no lista Pontos
+		self.canvas.create_rectangle(0, 0, largura, altura, fill='black')
+		self.canvas.create_line(x(0),0,x(0),altura, arrow=FIRST, fill='#BFBFBF') #eixo y
+		self.canvas.create_line(0, y(0), largura, y(0), arrow=LAST, fill='#BFBFBF') #eixo x
+		
+		for p in pontos:
+			#self.canvas.create_oval(x(p[0])-1, y(p[1])-1, x(p[0])+3, y(p[1])+3, width='1', fill='red')
+			self.canvas.create_line(x(0), y(0), x(p[0]), y(p[1]), arrow=LAST, width='1', fill='#FFFF00')
+			
+def x(px):
+	px = float(px)
+	return px + (largura/2) - fx
+		
+def y(py):
+	py = float(py)
+	return altura - (py + (altura/2)) - fy
+
+def get_angulo(px, py): # retorna o angulo do vetor
+	if (py >= 0):
+		return degrees(acos(px / hypot(px, py)))
+	else:
+		return 360 - degrees(acos(px / hypot(px, py)))
+	
+def propridades(px, py):	
+	pass
+		
+instancia=Tk()
+Interface(instancia)
+instancia.mainloop()
